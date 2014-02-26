@@ -6,8 +6,10 @@
     }
   };
 
-  var conn = new Strophe.Connection("/http-bind");
-  conn.connect("thisisanexample@examples.org", null, function(status) {
+  var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");
+  conn.connect("educhatspiketest@blah.im", "randomrandom", function(status) {
+//   var conn = new Strophe.Connection("http://localhost:3000/http-bind");
+//   conn.connect("thisisanexample@examples.org", "educhatpass", function(status) {
     switch (status) {
       case Strophe.Status.CONNECTED:
         $(document).trigger('connected');
