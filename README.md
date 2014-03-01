@@ -6,15 +6,22 @@ The source code is written in the [Go](http://golang.org/) programming language.
 ### Installation
 The source code can be downloaded with:
 ~~~
-go get github.com/yggie/EduChatSpike
+$ go get github.com/yggie/EduChatSpike
 ~~~
 
 ### Starting the Server
 This will download the source to `$GOPATH/github.com/yggie/EduChatSpike`. The following commands will build and run the server:
 
 ~~~
-go build
-./EduChatSpike
+$ go build
+$ ./EduChatSpike
 ~~~
 
 By default, the server runs on `http://localhost:3000`
+
+### Testing
+The code uses the Go BDD testing framework, [Ginkgo](http://onsi.github.io/ginkgo/) to test. Tests can be run from the root directory, with the command:
+
+~~~
+$ ginkgo tests/
+~~~
