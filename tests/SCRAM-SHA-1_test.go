@@ -94,6 +94,15 @@ var _ = Describe("SCRAM-SHA-1", func() {
   })
 
   Describe("final response", func() {
+    It("should not accept mismatch between the input and cached nonce", func() {
+      _, err := FinalResponseSCRAMSHA1([]byte("c=,r=abcd,p="), []byte("n=,r=,r=abc,s=,i="), &sdb)
+      Expect(err).NotTo(BeNil())
+    })
+
+    It("should not accept invalid Client Proofs", func() {
+      _, err := FinalResponseSCRAMSHA1([]byte("c=,r=abc,p=hello"), []byte("n=,r=,r=abc,s=,i="), &sdb)
+      Expect(err).NotTo(BeNil())
+    })
   })
 
   Describe("full handshake", func() {
