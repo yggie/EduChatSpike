@@ -79,4 +79,13 @@ func Respond(sID string, data []byte, db *records.Database) ([]byte, error) {
   }
 }
 
+func WasVerified(sID string) bool {
+  _, ok := store[sID]
+  if ok {
+    delete(store, sID)
+    return true
+  }
+  return false
+}
+
 

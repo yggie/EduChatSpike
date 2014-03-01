@@ -106,24 +106,24 @@ func HttpBindHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createNewSession(w http.ResponseWriter, r *BOSHRequest) error {
-  log.Printf("Initiating new session for arrived for %s\n", r.To)
-  resp := `<body wait="60"
-                 polling="5"
-                 inactivity="30"
-                 requests="2"
-                 hold="1"
-                 maxpause="120"
-                 sid="thisismysessionid"
-                 charsets="ISO_8859-1 ISO-2022-JP"
-                 ver="1.6"
-                 from="educhat.org"
-                 xmlns="http://jabber.org/protocol/httpbind">
-              <stream:features>
-                <mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">
-                  <mechanism>SCRAM-SHA-1</mechanism>
-                </mechanisms>
-              </stream:features>
-           </body>`
+  resp := `` +
+  `<body wait="60" ` +
+        `polling="5" ` +
+        `inactivity="30" ` +
+        `requests="2" ` +
+        `hold="1" ` +
+        `maxpause="120" ` +
+        `sid="thisismysessionid" ` +
+        `charsets="ISO_8859-1 ISO-2022-JP" ` +
+        `ver="1.6" ` +
+        `from="educhat.org" ` +
+        `xmlns="http://jabber.org/protocol/httpbind">` +
+      `<stream:features>` +
+        `<mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl">` +
+          `<mechanism>SCRAM-SHA-1</mechanism>` +
+        `</mechanisms>` +
+      `</stream:features>` +
+   `</body>`
   fmt.Printf("\n\nNew Session Created:\n\n%s\n", resp)
   _, err := w.Write([]byte(resp))
   return err
@@ -135,12 +135,12 @@ func respondTo(r *BOSHRequest) ([]byte, error) {
     if err != nil {
       return nil, err
     }
-    bytes := []byte(`
-    <body xmlns="http://jabber.org/protocol/httpbind">
-      <challenge xmlns="urn:ietf:params:xml:ns:xmpp-sasl">` +
-      string(b) +
-     `</challenge>
-    </body>`)
+    bytes := []byte(`` +
+    `<body xmlns="http://jabber.org/protocol/httpbind">` +
+      `<challenge xmlns="urn:ietf:params:xml:ns:xmpp-sasl">` +
+        string(b) +
+      `</challenge>` + 
+    `</body>`)
     return bytes, err
 
   } else if r.AuthResponse.Exists() {
@@ -148,16 +148,23 @@ func respondTo(r *BOSHRequest) ([]byte, error) {
     if err != nil {
       return nil, err
     }
-    bytes := []byte(`
-    <body xmlns="http://jabber.org/protocol/httpbind">
-      <success xmlns="urn:ietf:params:xml:ns:xmpp-sasl">` +
-      string(b) +
-     `</success>
-    </body>`)
+    bytes := []byte(`` +
+    `<body xmlns="http://jabber.org/protocol/httpbind">` +
+      `<success xmlns="urn:ietf:params:xml:ns:xmpp-sasl">` +
+        string(b) +
+      `</success>` +
+    `</body>`)
     return bytes, err
 
   } else if r.ShouldRestart() {
-    time.Sleep(60 * time.Second)
+    if sasl.WasVerified(r.SID) {
+      return []byte(`` +
+      `<body xmlns="http://jabber.org/protocol/httpbind" xmlns:stream="http://etherx.jabber.org/streams">` +
+        `<stream:features>` +
+          `<bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/>` +
+        `</stream:features>` +
+      `</body>`), nil
+    }
   } else {
     time.Sleep(60 * time.Second)
   }
@@ -165,19 +172,11 @@ func respondTo(r *BOSHRequest) ([]byte, error) {
 }
 
 var sdb = records.Database{
-  Users: StubbedUserFinder{
-    Username: "some-random-dude",
-    Salt: "b977d0396381a0d2092d04075b54c91e90442d06",
-    PasswordKey: "1adfadcf7bf3036ee3aa21d59779655fc06b3596",
-  },
+  Users: StubbedUserFinder{},
 }
 
 type StubbedUserFinder struct {
   records.UserFinder
-
-  Username string
-  Salt string
-  PasswordKey string
 }
 
 func (s StubbedUserFinder) FindByName(name string) models.User {
