@@ -1,5 +1,9 @@
 package xmpp
 
+import (
+  "encoding/xml"
+)
+
 // represents a single XMPP packet that could be received
 type Stanza struct {
   // if exists, it is the client's preferred authentication mechanism
@@ -22,4 +26,14 @@ func (s *Stanza) HasResponse() bool {
 
 func (s *Stanza) HasInfoQuery() bool {
   return len(s.Iq) != 0
+}
+
+func ParseString(str string) (*Stanza, error) {
+  stanza := Stanza{}
+  err := xml.Unmarshal([]byte(str), &stanza);
+  if err != nil {
+    return nil, err
+  }
+
+  return &stanza, nil
 }

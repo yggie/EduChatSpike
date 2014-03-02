@@ -9,6 +9,12 @@ import (
   "testing"
 )
 
+func TestSecurityFeatures(t *testing.T) {
+  records.Users = StubbedUserFinder{}
+  RegisterFailHandler(Fail)
+  RunSpecs(t, "Security Features Suite")
+}
+
 var (
   StubUser = models.NewUser("user", "secret")
 )
@@ -19,11 +25,5 @@ type StubbedUserFinder struct {
 
 func (s StubbedUserFinder) FindByName(name string) models.User {
   return StubUser
-}
-
-func TestAuth(t *testing.T) {
-  records.Users = StubbedUserFinder{}
-  RegisterFailHandler(Fail)
-  RunSpecs(t, "Security Features Suite")
 }
 

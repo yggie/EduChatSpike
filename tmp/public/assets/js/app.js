@@ -3,6 +3,15 @@
     connection: null,
     log: function(msg) {
       $('#log').append("<p>" + msg + "</p>");
+    },
+    send_ping: function(to) {
+      var ping = $iq({
+        to: to,
+        type: "get",
+        id: "ping1"
+      }).c("ping", { xmlns: "urn:xmpp:ping" });
+
+      Client.connection.send(ping);
     }
   };
 
@@ -41,6 +50,10 @@
 
   $(document).bind('connected', function() {
     Client.log("Connection established.");
+
+    var domain = Strophe.getDomainFromJid(Client.connection.jid);
+
+    Client.send_ping(domain);
   });
 
   $(document).bind("connecting", function() {

@@ -23,5 +23,5 @@ By default, the server runs on `http://localhost:3000`
 The code uses the Go BDD testing framework, [Ginkgo](http://onsi.github.io/ginkgo/) to test. Tests can be run from the root directory, with the command:
 
 ~~~
-$ ginkgo tests/
+$ ginkgo -r
 ~~~

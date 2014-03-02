@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("SCRAM-SHA-1", func() {
 
-  Describe("first message", func() {
+  Context("first message", func() {
 
     var (
       clientNonce string
@@ -88,7 +88,7 @@ var _ = Describe("SCRAM-SHA-1", func() {
     })
   })
 
-  Describe("full handshake", func() {
+  Context("full handshake", func() {
 
     salt, _  := auth.DecodeBase64([]byte("QSXCR+Q6sek8bf92"))
     StubUser = models.User{

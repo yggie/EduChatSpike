@@ -8,13 +8,13 @@ import (
   "github.com/yggie/EduChatSpike/modules/sasl"
 )
 
-type RequestProcessor struct {
+type Listener struct {
   Request *Request
   Writer http.ResponseWriter
 }
 
 // initializes an SASL handshake
-func (r *RequestProcessor) InitSASL(auth *xmpp.Auth) error {
+func (r *Listener) InitSASL(auth *xmpp.Auth) error {
   response, data, err := sasl.Init(auth.Mechanism, auth.Data)
   if err != nil {
     return err
@@ -35,7 +35,7 @@ func (r *RequestProcessor) InitSASL(auth *xmpp.Auth) error {
 }
 
 // response to an SASL handshake
-func (r *RequestProcessor) RespondSASL(clientResponse *xmpp.Response) error {
+func (r *Listener) RespondSASL(clientResponse *xmpp.Response) error {
   session, err := GetSession(r.Request.SessionID)
   if err != nil {
     return err
@@ -53,7 +53,7 @@ func (r *RequestProcessor) RespondSASL(clientResponse *xmpp.Response) error {
   return nil
 }
 
-func (r *RequestProcessor) Unprocessed() error {
+func (r *Listener) Unprocessed() error {
   var err error
   if r.Request.SessionID == "" {
     err = r.CreateNewSession()
@@ -68,14 +68,14 @@ func (r *RequestProcessor) Unprocessed() error {
   return err
 }
 
-func (r *RequestProcessor) Complete(response string) error {
+func (r *Listener) Complete(response string) error {
   r.WriteResponse(`<body xmlns="http://jabber.org/protocol/httpbind">` + response + `</body>`)
 
   return nil
 }
 
 // initializes a new session
-func (r *RequestProcessor) CreateNewSession() error {
+func (r *Listener) CreateNewSession() error {
   session := NewSession()
   // TODO actually read request data to determine settings
   r.WriteResponse(`` +
@@ -101,7 +101,7 @@ func (r *RequestProcessor) CreateNewSession() error {
    return nil
 }
 
-func (r *RequestProcessor) RestartSession() error {
+func (r *Listener) RestartSession() error {
   session, err := GetSession(r.Request.SessionID)
   if err != nil {
     return err
@@ -116,7 +116,7 @@ func (r *RequestProcessor) RestartSession() error {
   return nil
 }
 
-func (r *RequestProcessor) WriteResponse(response string) {
+func (r *Listener) WriteResponse(response string) {
   // set up default reply headers
   r.Writer.Header().Set("Content-Type", "text/xml")
 

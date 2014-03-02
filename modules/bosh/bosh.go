@@ -16,12 +16,12 @@ func HttpBindHandler(w http.ResponseWriter, r *http.Request) {
 
   if err == nil {
 
-    processor := RequestProcessor{
+    listener := Listener{
       Request: request,
       Writer: w,
     }
 
-    err = request.Process(&processor)
+    err = request.Process(&listener)
   }
 
   if err != nil {
