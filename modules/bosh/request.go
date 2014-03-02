@@ -51,7 +51,7 @@ type Request struct {
   Version string        `xml:"ver,attr"`
 
   // The session ID, present only for existing sessions
-  SID string            `xml:"sid,attr"`
+  SessionID string      `xml:"sid,attr"`
 
   XMLName xml.Name      `xml:"body"`
 }

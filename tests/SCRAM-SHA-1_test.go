@@ -8,24 +8,7 @@ import (
   . "github.com/yggie/EduChatSpike/modules/sasl"
   "github.com/yggie/EduChatSpike/modules/auth"
   "github.com/yggie/EduChatSpike/modules/models"
-  "github.com/yggie/EduChatSpike/modules/records"
 )
-
-var stubUser = models.User {
-  Pass: auth.GenPass("secret"),
-}
-
-type StubbedUserFinder struct {
-  records.UserFinder
-}
-
-func (d StubbedUserFinder) FindByName(name string) models.User {
-  return stubUser
-}
-
-var sdb = records.Database{
-  Users: StubbedUserFinder{},
-}
 
 var _ = Describe("SCRAM-SHA-1", func() {
 
@@ -56,7 +39,7 @@ var _ = Describe("SCRAM-SHA-1", func() {
 
       BeforeEach(func() {
         var raw []byte
-        raw, err = InitialResponseSCRAMSHA1(clientFirstMsg, nonce, &sdb)
+        raw, err = InitialResponseSCRAMSHA1(clientFirstMsg, nonce)
         msg = string(raw)
         components = strings.Split(msg, ",")
       })
@@ -74,7 +57,7 @@ var _ = Describe("SCRAM-SHA-1", func() {
       })
 
       It("should set the second component to the users salt", func() {
-        raw := stubUser.Pass.Salt
+        raw := StubUser.Pass.Salt
         encBase64 := auth.EncodeBase64(raw)
         Ω(components[1][2:]).To(Equal(string(encBase64)))
       })
@@ -87,7 +70,7 @@ var _ = Describe("SCRAM-SHA-1", func() {
 
     Context("with invalid requests", func() {
       It("should throw an error when it receives malformed requests", func() {
-        _, err := InitialResponseSCRAMSHA1([]byte("thisissomerandommessage"), nonce, &sdb)
+        _, err := InitialResponseSCRAMSHA1([]byte("thisissomerandommessage"), nonce)
         Expect(err).NotTo(BeNil())
       })
     })
@@ -95,12 +78,12 @@ var _ = Describe("SCRAM-SHA-1", func() {
 
   Describe("final response", func() {
     It("should not accept mismatch between the input and cached nonce", func() {
-      _, err := FinalResponseSCRAMSHA1([]byte("c=,r=abcd,p="), []byte("n=,r=,r=abc,s=,i="), &sdb)
+      _, err := FinalResponseSCRAMSHA1([]byte("c=,r=abcd,p="), []byte("n=,r=,r=abc,s=,i="))
       Expect(err).NotTo(BeNil())
     })
 
     It("should not accept invalid Client Proofs", func() {
-      _, err := FinalResponseSCRAMSHA1([]byte("c=,r=abc,p=hello"), []byte("n=,r=,r=abc,s=,i="), &sdb)
+      _, err := FinalResponseSCRAMSHA1([]byte("c=,r=abc,p=hello"), []byte("n=,r=,r=abc,s=,i="))
       Expect(err).NotTo(BeNil())
     })
   })
@@ -108,7 +91,7 @@ var _ = Describe("SCRAM-SHA-1", func() {
   Describe("full handshake", func() {
 
     salt, _  := auth.DecodeBase64([]byte("QSXCR+Q6sek8bf92"))
-    stubUser = models.User{
+    StubUser = models.User{
       Pass: auth.Pass{
         Salt: salt,
         Key: auth.Hi([]byte("pencil"), salt, auth.PASSWORD_ITERATIONS),
@@ -121,7 +104,7 @@ var _ = Describe("SCRAM-SHA-1", func() {
 
     It("should respond correctly to the first message", func() {
       clientMsg := "n,,u=" + username + ",n=" + clientNonce
-      msg, err := InitialResponseSCRAMSHA1([]byte(clientMsg), []byte(nonce), &sdb)
+      msg, err := InitialResponseSCRAMSHA1([]byte(clientMsg), []byte(nonce))
 
       Expect(err).To(BeNil())
       Expect(string(msg)).To(Equal("r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,s=QSXCR+Q6sek8bf92,i=" + iters))
@@ -131,7 +114,7 @@ var _ = Describe("SCRAM-SHA-1", func() {
       prevMsg := "n=" + username + ",r=" + clientNonce + ",r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,s=QSXCR+Q6sek8bf92,i=" + iters
       // should also be able to handle cases with null characters
       clientFinalMsg := "c=biws,r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,p=v0X8v3Bz2T0CJGbJQyF0X+HI4Ts=\x00"
-      msg, _ := FinalResponseSCRAMSHA1([]byte(clientFinalMsg), []byte(prevMsg), &sdb)
+      msg, _ := FinalResponseSCRAMSHA1([]byte(clientFinalMsg), []byte(prevMsg))
 
       // Expect(err).To(BeNil())
       Expect(string(msg)).To(Equal("v=rmF9pqV8S7suAoZWja4dJRkFsKQ="))

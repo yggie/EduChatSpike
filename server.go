@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
+  // setup user finder
   records.Users = StubbedUserFinder{}
+
   http.HandleFunc("/", handler)
   http.HandleFunc("/http-bind", bosh.HttpBindHandler)
   http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("tmp/public/"))))
