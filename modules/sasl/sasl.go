@@ -6,7 +6,6 @@ import(
   "errors"
   "strings"
   "github.com/yggie/EduChatSpike/modules/auth"
-  "github.com/yggie/EduChatSpike/modules/records"
 )
 
 type metadata struct {
@@ -25,7 +24,7 @@ func genNonce() []byte {
   return []byte("MsQUY9iw0T9fx2MUEz6LZPwGuhVvWAhc")
 }
 
-func Init(mechanism string, sID string, data []byte, db *records.Database) ([]byte, error) {
+func Init(mechanism string, sID string, data []byte) ([]byte, error) {
   switch mechanism {
   case "SCRAM-SHA-1":
     msg, err := auth.DecodeBase64(data)
@@ -34,7 +33,7 @@ func Init(mechanism string, sID string, data []byte, db *records.Database) ([]by
       return nil, AuthFailError
     }
     nonce := genNonce()
-    response, err := InitialResponseSCRAMSHA1(msg, nonce, db)
+    response, err := InitialResponseSCRAMSHA1(msg, nonce)
     if err != nil {
       return nil, err
     }
@@ -53,7 +52,7 @@ func Init(mechanism string, sID string, data []byte, db *records.Database) ([]by
   return nil, nil
 }
 
-func Respond(sID string, data []byte, db *records.Database) ([]byte, error) {
+func Respond(sID string, data []byte) ([]byte, error) {
   meta, ok := store[sID]
   if !ok {
     return nil, AuthFailError
@@ -67,7 +66,7 @@ func Respond(sID string, data []byte, db *records.Database) ([]byte, error) {
       return nil, AuthFailError
     }
 
-    response, err := FinalResponseSCRAMSHA1(raw, meta.Data, db)
+    response, err := FinalResponseSCRAMSHA1(raw, meta.Data)
     if err != nil {
       return nil, err
     }

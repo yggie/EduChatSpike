@@ -8,7 +8,7 @@ import (
   "github.com/yggie/EduChatSpike/modules/records"
 )
 
-func InitialResponseSCRAMSHA1(initialMsg, nonce []byte, db *records.Database) ([]byte, error) {
+func InitialResponseSCRAMSHA1(initialMsg, nonce []byte) ([]byte, error) {
   // first message must start with either "n", "y" or "p"
   if initialMsg[0] != 'n' { // && initialMsg[0] != 'p' && initialMsg[0] != 'y' {
     log.Println("invalid initial response")
@@ -26,13 +26,13 @@ func InitialResponseSCRAMSHA1(initialMsg, nonce []byte, db *records.Database) ([
   username := string(s[2][2:])
   clientNonce := string(s[3][2:])
 
-  user := db.Users.FindByName(username)
+  user := records.Users.FindByName(username)
 
   encodedSalt := string(auth.EncodeBase64(user.Pass.Salt))
   return []byte("r=" + clientNonce + string(nonce) + ",s=" + encodedSalt + ",i=" + strconv.Itoa(auth.PASSWORD_ITERATIONS)), nil
 }
 
-func FinalResponseSCRAMSHA1(clientFinalMsg, prevMsg []byte, db *records.Database) ([]byte, error) {
+func FinalResponseSCRAMSHA1(clientFinalMsg, prevMsg []byte) ([]byte, error) {
   oldMsg := strings.Split(string(prevMsg), ",")
   components := strings.Split(string(clientFinalMsg), ",")
 
@@ -44,7 +44,7 @@ func FinalResponseSCRAMSHA1(clientFinalMsg, prevMsg []byte, db *records.Database
   authMsg := string(prevMsg) + "," + components[0] + "," + components[1]
 
   username := oldMsg[2][2:]
-  user := db.Users.FindByName(username)
+  user := records.Users.FindByName(username)
 
   // for some reason there are null characters at the end?
   tmp := strings.TrimRight(components[2][2:], "\x00")
