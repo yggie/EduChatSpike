@@ -5,6 +5,7 @@ import (
 )
 
 type User struct {
+  Name string
   Pass auth.Pass
 }
 

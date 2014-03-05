@@ -36,3 +36,7 @@ type Resource struct {
 func (iq *Iq) HasPing() bool {
   return len(iq.Ping) != 0
 }
+
+func (iq *Iq) ShouldBind() bool {
+  return len(iq.Bind) != 0
+}

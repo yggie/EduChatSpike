@@ -2,17 +2,17 @@ package bosh
 
 import (
   "fmt"
+  "time"
   "net/http"
   "io/ioutil"
   "encoding/xml"
-  "github.com/yggie/EduChatSpike/modules/xmpp"
 )
 
 // The session creation request body as defined by XEP-0206
 type Request struct {
 
   // embeds the standard XMPP message body
-  xmpp.Stanza
+  InnerXML string       `xml:",innerxml"`
 
   // Specifies the HTTP Content-Type of following responses
   Content string        `xml:"content,attr"`
@@ -36,7 +36,7 @@ type Request struct {
 
   Secure bool           `xml:"secure,attr"`
   // Wait time in seconds
-  Wait  int             `xml:"wait,attr"`
+  Wait  time.Duration   `xml:"wait,attr"`
 
   // The default language of the XML character data
   Lang  string          `xml:"xml:lang,attr"`
@@ -58,6 +58,10 @@ type Request struct {
 
 func (r *Request) ShouldRestart() bool {
   return len(r.Restart) != 0
+}
+
+func (r *Request) HasSessionID() bool {
+  return r.SessionID != ""
 }
 
 func ParseRequest(r *http.Request) (*Request, error) {

@@ -15,10 +15,6 @@ type Receiver interface {
   Receive(message string)
 }
 
-func (r *UserResource) JID() string {
-  return r.User.Name + "@" + DOMAIN + "/" + r.ID
-}
-
 func (r *UserResource) Send(message string) error {
   stanza, err := ParseMessage(message)
   if err != nil {
@@ -41,6 +37,14 @@ func (r *UserResource) Send(message string) error {
 
 func (r *UserResource) Push(message string) {
   r.Receiver.Receive(message)
+}
+
+func (r *UserResource) UserName() string {
+  return r.User.Name
+}
+
+func (r *UserResource) JID() string {
+  return r.User.Name + "@" + DOMAIN + "/" + r.ID
 }
 
 func (r *UserResource) ProcessInfoQuery(iq Iq) string {

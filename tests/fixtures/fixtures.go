@@ -2,7 +2,12 @@ package fixtures
 
 import (
   . "github.com/yggie/EduChatSpike/modules/xmpp"
+  "github.com/yggie/EduChatSpike/modules/records"
 )
+
+func Initialize() {
+  records.Users = StubbedUserFinder{}
+}
 
 type ResourceFixture struct {
   UserResource *UserResource
@@ -35,5 +40,4 @@ func LogInAsUser(name string) *ResourceFixture {
   fixture.UserResource = NewResourceForUser(name, &fixture)
   return &fixture
 }
-
 

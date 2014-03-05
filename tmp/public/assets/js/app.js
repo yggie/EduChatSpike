@@ -14,10 +14,10 @@ var Client = {
   }
 };
 
-var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");
-conn.connect("educhatspiketest@blah.im", "randomrandom", function(status) {
-//   var conn = new Strophe.Connection("http://localhost:3000/http-bind");
-//   conn.connect("testuser@examples.org", "embeddedchatforall", function(status) {
+//   var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");
+//   conn.connect("educhatspiketest@blah.im", "randomrandom", function(status) {
+  var conn = new Strophe.Connection("http://localhost:3000/http-bind");
+  conn.connect("testuser@examples.org", "embeddedchatforall", function(status) {
   switch (status) {
     case Strophe.Status.CONNECTED:
       $(document).trigger('connected');
