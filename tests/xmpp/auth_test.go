@@ -15,7 +15,6 @@ var _ = Describe("Anonymous connections", func() {
     salt, _  := auth.DecodeBase64([]byte("QSXCR+Q6sek8bf92"))
     user := CreateStubUserWithSalt("user", "pencil", salt)
     connection := NewAnonymousConnection()
-    var nonce string
 
     BeforeEach(func() {
       connection.ClearMessages()
