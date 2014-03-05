@@ -28,9 +28,9 @@ func (s *Stanza) HasInfoQuery() bool {
   return len(s.Iq) != 0
 }
 
-func ParseString(str string) (*Stanza, error) {
+func ParseMessage(message string) (*Stanza, error) {
   stanza := Stanza{}
-  err := xml.Unmarshal([]byte(str), &stanza);
+  err := xml.Unmarshal([]byte("<Stanza>" + message + "</Stanza>"), &stanza)
   if err != nil {
     return nil, err
   }

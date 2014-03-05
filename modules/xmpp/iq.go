@@ -7,6 +7,7 @@ import (
 type Iq struct {
   ID string             `xml:"id,attr"`
   Type string           `xml:"type,attr"`
+  To string             `xml:"to,attr"`
   Bind []Bind           `xml:"bind"`
   Ping []Ping           `xml:"ping"`
   XMLName xml.Name      `xml:"iq"`
