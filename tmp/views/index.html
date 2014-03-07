@@ -15,8 +15,23 @@
 </head>
 
 <body>
-  <h1>Hello there!</h1>
+  <div class="split-window">
+    <h1>Chat Window</h1>
 
-  <div id="log"></div>
+    <div id="log"></div>
+  </div>
+
+  <div id="debug-window" class="split-window">
+    <h1>Debug Console</h1>
+
+    <div id="console"></div>
+
+    <textarea id="input" name="disabled" disabled ></textarea>
+
+    <div id="buttonbar">
+      <input id="send_button" type="submit" value="Send Data" disabled class="button">
+      <input id="disconnect_button" type="submit" value="Disconnect" disabled class="button">
+    </div>
+  </div>
 </body>
 </html>

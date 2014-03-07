@@ -6,6 +6,7 @@ import (
   "time"
   "strconv"
   "net/http"
+  "github.com/yggie/EduChatSpike/modules/xmpp"
 )
 
 var (
@@ -95,17 +96,18 @@ func InitializeNewSession() string {
         "inactivity='30' " +
         "requests='2' " +
         "hold='1' " +
+        "from='" + xmpp.DOMAIN + "' " +
         "maxpause='120' " +
         "sid='" + session.ID + "' " +
         "charsets='ISO_8859-1 ISO-2022-JP' " +
         "ver='1.6' " +
-        "from='educhat.spike' " +
-        "xmlns='http://jabber.org/protocol/httpbind'>" +
+        "xmlns='http://jabber.org/protocol/httpbind' " +
+        "xmlns:stream='http://etherx.jabber.org/streams'>" +
     "<stream:features>" +
       "<mechanisms xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>" +
         "<mechanism>SCRAM-SHA-1</mechanism>" +
       "</mechanisms>" +
-    "</stream:features" +
+    "</stream:features>" +
   "</body>"
 }
 
