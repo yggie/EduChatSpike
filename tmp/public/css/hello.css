@@ -70,9 +70,11 @@ textarea.disabled {
 
 .separator {
   border-color: blue;
-  border-style: dashed;
   border-width: 1px;
-  height: 1px;
+  border-top-style: dashed;
+  border-bottom-style: none;
+  border-right-style: none;
+  border-left-style: none;
   width: 100%;
 }
 

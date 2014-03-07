@@ -91,74 +91,129 @@ var Client = {
     }
 
     return result.join("");
+  },
+
+  text_to_xml: function(text) {
+    var doc = null;
+    if (window['DOMParser']) {
+      var parser = new DOMParser();
+      doc = parser.parseFromString(text, 'text/xml');
+    } else if (window['ActiveXObject']) {
+      var doc = new ActiveXObject("MSXML2.DOMDocument");
+      doc.async = false;
+      doc.loadXML(text);
+    } else {
+      throw {
+        type: 'ClientParsingError',
+        message: 'No DOMParser object found.'
+      };
+    }
+
+    var elem = doc.documentElement;
+    if ($(elem).filter('parsererror').length > 0) {
+      return null;
+    }
+
+    return elem;
   }
 };
 
-// var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");
-var conn = new Strophe.Connection("http://localhost:3000/http-bind");
-conn.xmlInput = function(body) {
-  Client.show_traffic(body, 'incoming');
-};
-conn.xmlOutput = function(body) {
-  Client.show_traffic(body, 'outgoing');
-};
-// conn.connect("educhatspiketest@blah.im", "randomrandom", function(status) {
-conn.connect("testuser@examples.org", "embeddedchatforall", function(status) {
-  switch (status) {
-    case Strophe.Status.CONNECTED:
-      $(document).trigger('connected');
-      break;
+(function() {
+  function initialize() {
+    // var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");
+    var conn = new Strophe.Connection("http://localhost:3000/http-bind");
+    conn.xmlInput = function(body) {
+      Client.show_traffic(body, 'incoming');
+    };
+    conn.xmlOutput = function(body) {
+      Client.show_traffic(body, 'outgoing');
+    };
+    // conn.connect("educhatspiketest@blah.im", "randomrandom", function(status) {
+    conn.connect("testuser@examples.org", "embeddedchatforall", function(status) {
+      switch (status) {
+        case Strophe.Status.CONNECTED:
+          $(document).trigger('connected');
+          break;
 
-    case Strophe.Status.CONNECTING:
-      $(document).trigger("connecting");
-      break;
+        case Strophe.Status.DISCONNECTED:
+          $(document).trigger('disconnected');
+          break;
 
-    case Strophe.Status.DISCONNECTED:
-      $(document).trigger('disconnected');
-      break;
+        case Strophe.Status.CONNFAIL:
+          $(document).trigger('connfail');
+          break;
 
-    case Strophe.Status.DISCONNECTING:
-      $(document).trigger("disconnecting");
-      break;
+        case Strophe.Status.AUTHFAIL:
+          $(document).trigger('authfail');
+          break;
+      }
 
-    case Strophe.Status.CONNFAIL:
-      $(document).trigger('connfail');
-      break;
+      Client.connection = conn;
+    });
 
-    case Strophe.Status.AUTHFAIL:
-      $(document).trigger('authfail');
-      break;
+    $(document).bind('connected', function() {
+      Client.log("Connection established.");
+
+      $('.button').removeAttr('disabled');
+      $('#input').removeClass('disabled').removeAttr('disabled');
+
+      var domain = Strophe.getDomainFromJid(Client.connection.jid);
+
+      Client.send_ping(domain);
+    });
+
+    $(document).bind('disconnected', function() {
+      Client.log("Connection terminated.");
+
+      $('.button').attr('disabled', '');
+      $('#input').addClass('disabled').attr('disabled', '');
+
+      Client.connection = null;
+    });
+
+    $(document).bind('authfail', function() {
+      Client.log("Authentication failed!");
+    });
+
+    $(document).bind("connfail", function() {
+      Client.log("Connection failed!");
+    });
+
+    $('#send_button').click(function() {
+      var input = $('#input').val();
+      var error = false;
+      if (input.length > 0) {
+        if (input[0] === '<') {
+          var xml = Client.text_to_xml(input);
+          if (xml) {
+            Client.connection.send(xml);
+            $('#input').val('');
+          } else {
+            error = true;
+          }
+        } else if (input[0] === '$') {
+          try {
+            var builder = eval(input);
+            Peek.connection.send(builder);
+            $('#input').val('');
+          } catch (e) {
+            error = true
+          }
+        } else {
+          error = true;
+        }
+      }
+
+      if (error) {
+        $('#input').animate({ backgroundColor: "#faa" });
+      }
+    });
+
+    $('#input').keypress(function() {
+      $(this).css({ backgroundColor: "#fff" });
+    });
   }
 
-  Client.connection = conn;
-});
+  $(document).ready(initialize);
+})();
 
-$(document).bind('connected', function() {
-  Client.log("Connection established.");
-
-  var domain = Strophe.getDomainFromJid(Client.connection.jid);
-
-  Client.send_ping(domain);
-});
-
-$(document).bind("connecting", function() {
-  Client.log("Connecting...");
-});
-
-$(document).bind('disconnected', function() {
-  Client.log("Connection terminated.");
-
-  Client.connection = null;
-});
-
-$(document).bind('disconnecting', function() {
-  Client.log("Disconnecting from server.");
-});
-
-$(document).bind('authfail', function() {
-  Client.log("Authentication failed!");
-});
-
-$(document).bind("connfail", function() {
-  Client.log("Connection failed!");
-});
