@@ -1,8 +1,13 @@
+// to be moved to a separate file
 var Client = {
   connection: null,
+  room: null,
+  joined: false,
+  participants: null,
+  nickname: 'my-nickname',
 
   log: function(msg) {
-    $('#log').append("<p>" + msg + "</p>");
+    $('#chat').append("<p>" + msg + "</p>");
   },
 
   send_ping: function(to) {
@@ -115,21 +120,56 @@ var Client = {
     }
 
     return elem;
+  },
+
+  on_presence: function(presence) {
+    var from = $(presence).attr('from');
+    var room = Strophe.getBareJidFromJid(from);
+
+    // make sure this presence is for the right room
+    if (room === Client.room) {
+      var nick = Strophe.getResourceFromJid(from);
+
+      if ($(presence).attr('type') === 'error' && !Client.joined) {
+        // error joining room, reset app
+        Client.connection.disconnect();
+      } else if (!Client.participants[nick] && $(presence).attr('type') !== 'unavailable') {
+        Client.participants[nick] = true;
+        $('#participant-list').append('<li>' + nick + '</li>');
+      }
+
+      if ($(presence).attr('type') !== 'error' && !Client.joined) {
+        // check for status 110 to see if it's our own presence
+        if ($(presence).find("status[code='110']").length > 0) {
+          // check if server changed our nick
+          if ($(presence).find("status[code='210']").length > 0) {
+            Client.nickname = Strophe.getResourceFromJid(from);
+          }
+
+          // room join complete
+          $(document).trigger("room_joined");
+        }
+      }
+    }
+
+    return true;
   }
 };
 
 (function() {
   function initialize() {
-    // var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");
-    var conn = new Strophe.Connection("http://localhost:3000/http-bind");
+    // var login = { jid: 'testuser@examples.org', password: 'embeddedchatforall', host: 'http://localhost:3000/http-bind', room: 'educhattestroom@educhat.spike' }
+    var login = { jid: 'educhatspiketest@blah.im', password: 'randomrandom', host: 'http://bosh.metajack.im:5280/xmpp-httpbind', room: 'educhat-spike-room@rooms.blah.im'}
+
+    Client.room = login.room;
+    var conn = new Strophe.Connection(login.host);
     conn.xmlInput = function(body) {
       Client.show_traffic(body, 'incoming');
     };
     conn.xmlOutput = function(body) {
       Client.show_traffic(body, 'outgoing');
     };
-    // conn.connect("educhatspiketest@blah.im", "randomrandom", function(status) {
-    conn.connect("testuser@examples.org", "embeddedchatforall", function(status) {
+    conn.connect(login.jid, login.password, function(status) {
       switch (status) {
         case Strophe.Status.CONNECTED:
           $(document).trigger('connected');
@@ -157,6 +197,12 @@ var Client = {
       $('.button').removeAttr('disabled');
       $('#input').removeClass('disabled').removeAttr('disabled');
 
+      Client.joined = false;
+      Client.participants = {};
+      Client.connection.send($pres().c('priority').t('-1'));
+      Client.connection.addHandler(Client.on_presence, null, "presence");
+      Client.connection.send($pres({ to: Client.room + '/' + Client.nickname}).c('x', {xmlns: 'http://jabber.org/protocol/muc'}));
+
       var domain = Strophe.getDomainFromJid(Client.connection.jid);
 
       Client.send_ping(domain);
@@ -167,6 +213,10 @@ var Client = {
 
       $('.button').attr('disabled', '');
       $('#input').addClass('disabled').attr('disabled', '');
+      $('#participant-list').empty();
+      $('#room-name').empty();
+      $('#room-topic').empty();
+      $('#chat').empty();
 
       Client.connection = null;
     });
@@ -177,6 +227,20 @@ var Client = {
 
     $(document).bind("connfail", function() {
       Client.log("Connection failed!");
+    });
+
+    $(document).bind('room_joined', function() {
+      Client.joined = true;
+
+      $('#leave').removeAttr('disabled');
+      $('#room-name').text(Client.room);
+
+      $('#chat').append("<div class='notice'>*** Room joined.</div>");
+    });
+
+    $('#leave').click(function() {
+      Client.connection.send($pres({ to: Client.room + '/' + Client.nickname, type: 'unavailable' }));
+      Client.connection.disconnect();
     });
 
     $('#send_button').click(function() {

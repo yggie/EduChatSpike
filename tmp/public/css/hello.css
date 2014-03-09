@@ -78,6 +78,33 @@ textarea.disabled {
   width: 100%;
 }
 
+#toolbar {
+  text-align: center;
+  padding: 5px;
+  margin-bottom: 15px;
+}
+
+#room-name {
+  font-size: 150%;
+  font-weight: bold;
+}
+
+.error {
+  color: #d33;
+}
+
+.message {
+  color: #aaa;
+}
+
+.self {
+  color: #f66;
+}
+
+.delayed {
+  opacity: 0.5;
+}
+
 .xml_punc { color: #888; }
 .xml_tag { color: #e77; }
 .xml_aname { color: #55d; }

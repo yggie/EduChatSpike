@@ -18,7 +18,21 @@
   <div class="split-window">
     <h1>Chat Window</h1>
 
-    <div id="log"></div>
+    <div id="toolbar">
+      <input id="leave" type="button" value="Leave Room" disabled>
+    </div>
+
+    <div>
+      <span id="room-name"></span>
+      <span id="room-topic"></span>
+      <div id="chat"></div>
+      <textarea id="input"></textarea>
+    </div>
+
+    <div id="participants">
+      <ul id="participant-list">
+      </ul>
+    </div>
   </div>
 
   <div id="debug-window" class="split-window">
