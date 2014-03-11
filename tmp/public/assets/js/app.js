@@ -4,7 +4,7 @@ var Client = {
   room: null,
   joined: false,
   participants: null,
-  nickname: 'my-nickname',
+  nickname: 'my-nickname-other',
 
   log: function(msg) {
     $('#chat').append("<p>" + msg + "</p>");
