@@ -136,6 +136,19 @@ var Client = {
       } else if (!Client.participants[nick] && $(presence).attr('type') !== 'unavailable') {
         Client.participants[nick] = true;
         $('#participant-list').append('<li>' + nick + '</li>');
+
+        if (Client.joined) {
+          $(document).trigger('user_joined', nick);
+        }
+      } else if (Client.participants[nick] && $(presence).attr('type') === 'unavailable') {
+        $('#participant-list li').each(function() {
+          if (nick === $(this).text()) {
+            $(this).remove();
+            return false;
+          }
+        });
+
+        $(document).trigger('user_left', nick);
       }
 
       if ($(presence).attr('type') !== 'error' && !Client.joined) {
@@ -153,6 +166,48 @@ var Client = {
     }
 
     return true;
+  },
+
+  on_public_message: function(message) {
+    var from = $(message).attr('from');
+    var room = Strophe.getBareJidFromJid(from);
+    var nick = Strophe.getResourceFromJid(from);
+
+    // make sure message is from the right place
+    if (room === Client.room) {
+      // is message from a user or the room itself?
+      var notice = !nick;
+
+      // messages from ourself will be styled differently
+      var nick_class = "nick";
+      if (nick === Client.nickname) {
+        nick_class += " self";
+      }
+
+      var body = $(message).children('body').text();
+
+      var delayed = $(message).children("delay").length > 0 || $(message).children("x[xmlns='jabber:x:delay']").length > 0;
+
+      if (!notice) {
+        var delay_css = delayed ? " delayed" : "";
+        Client.add_message("<div class='message" + delay_css + "'>&lt;<span class='" + nick_class + "'>" + nick + "</span>&gt; <span class='body'>" + body + "</span></div>");
+      } else {
+        Client.add_message("<div class='notice'>*** " + body + "</div>");
+      }
+    }
+
+    return true;
+  },
+
+  add_message: function(msg) {
+    var chat = $('#chat').get(0);
+    var at_bottom = chat.scrollTop >= chat.scrollHeight - chat.clientHeight;
+
+    $('#chat').append(msg);
+
+    if (at_bottom) {
+      chat.scrollTop = chat.scrollHeight;
+    }
   }
 };
 
@@ -202,6 +257,7 @@ var Client = {
       Client.connection.send($pres().c('priority').t('-1'));
       Client.connection.addHandler(Client.on_presence, null, "presence");
       Client.connection.send($pres({ to: Client.room + '/' + Client.nickname}).c('x', {xmlns: 'http://jabber.org/protocol/muc'}));
+      Client.connection.addHandler(Client.on_public_message, null, "message", "groupchat");
 
       var domain = Strophe.getDomainFromJid(Client.connection.jid);
 
@@ -236,6 +292,14 @@ var Client = {
       $('#room-name').text(Client.room);
 
       $('#chat').append("<div class='notice'>*** Room joined.</div>");
+    });
+
+    $(document).bind('user_joined', function(ev, nick) {
+      Client.add_message("<div class='notice'> *** " + nick + " joined.</div>");
+    });
+
+    $(document).bind('user_left', function(ev, nick) {
+      Client.add_message("<div class='notice'>*** " + nick + " left.</div>");
     });
 
     $('#leave').click(function() {
@@ -275,6 +339,18 @@ var Client = {
 
     $('#input').keypress(function() {
       $(this).css({ backgroundColor: "#fff" });
+    });
+
+    $('#chat_input').keypress(function(ev) {
+      if (ev.which === 13) {
+        ev.preventDefault();
+
+        var body = $(this).val();
+
+        Client.connection.send($msg({ to: Client.room, type: "groupchat" }).c('body').t(body));
+
+        $(this).val('');
+      }
     });
   }
 
